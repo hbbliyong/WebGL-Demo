@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>变换--移动</title>
+    <script src="js/utils.js"></script>
+    <script src="js/gl-matrix.js"></script>
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec4 position; uniform vec4 translation; void main(void){ gl_Position=position + translation; }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">
+        void main(void){ gl_FragColor =vec4(1.0,0.0,0.0,1.0); }
+    </script>
+</head>
+
+<body>
+    <div>
+
+    </div>
+    <script>
+        onload = function() {
+            document.addEventListener("keydown", onkeydown);
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+            /*清空画板上的颜色，并初始化颜色*/
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            //设定canvas初始化时候的深度
+            gl.clearDepth(1.0);
+            //清空画面上的颜色
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            var utils = new Utils(gl);
+            //顶点着色器和片段着色器生成
+            var v_shader = utils.create_shader("vs");
+            var f_shader = utils.create_shader("fs");
+
+            var program = utils.create_program(v_shader, f_shader);
+            //获取a_Position变量的存储位置
+            var attLocation = gl.getAttribLocation(program, "position");
+
+
+            //创建缓冲区
+            var vertices = new Float32Array([
+                0.0, 0.5, -0.5, -0.5, 0.5, -0.5,
+            ]);
+            /*正方形数据*/
+            var vertices1 = new Float32Array([-0.5, 0.5, -0.5, -0.5,
+                0.5, 0.5,
+                0.5, -0.5
+            ]);
+            var n = 3; //点的个数
+
+            var vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+            gl.bufferData(gl.ARRAY_BUFFER, vertices1, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(attLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(attLocation);
+
+            var tx = 0.0,
+                ty = 0.0,
+                tz = 0.0;
+
+            // uniformLocation的获取，获取的是着色器里的mvpMatrix的变量
+            var uniLocation = gl.getUniformLocation(program, 'translation');
+
+            function run() {
+                // 向uniformLocation中传入坐标变换矩阵
+                /*一个参数是uniform变量的序号，第二个参数是矩阵是否进行转置（true的话，有时候程序会崩溃），第三个参数是实际的坐标变换矩阵。*/
+                gl.uniform4f(uniLocation, tx, ty, tz, 0.0);
+
+                // 绘制模型
+                /*第一个参数是指定如何使用顶点进行绘图的一个常量，第二个参数是从第几个顶点开始使用，第三个参数是绘制几个顶点。*/
+                gl.drawArrays(gl.TRIANGLES, 0, n);
+            }
+            run();
+
+            function onkeydown(e) {
+                switch (e.keyCode) {
+                    case 37:
+                        tx -= .05;
+                        break;
+                    case 38:
+                        ty += .05;
+                        break;
+                    case 39:
+                        tx += .05;
+                        break;
+                    case 40:
+                        ty -= .05;
+                        break;
+                    default:
+                        break;
+                }
+                run();
+            }
+        }
+    </script>
+</body>
+
+</html>

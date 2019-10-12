@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>三角形</title>
+    <script src="js/utils.js"></script>
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec4 a_Position; void main(void){ gl_PointSize=20.0; gl_Position=a_Position; }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">
+        void main(void){ gl_FragColor =vec4(1.0,0.0,0.0,1.0); }
+    </script>
+</head>
+
+<body>
+    <div>
+
+    </div>
+    <script>
+        onload = function() {
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+            /*清空画板上的颜色，并初始化颜色*/
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            //设定canvas初始化时候的深度
+            gl.clearDepth(1.0);
+            //清空画面上的颜色
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            var utils = new Utils(gl);
+            //顶点着色器和片段着色器生成
+            var v_shader = utils.create_shader("vs");
+            var f_shader = utils.create_shader("fs");
+
+            var program = utils.create_program(v_shader, f_shader);
+            //获取a_Position变量的存储位置
+            var a_Position = gl.getAttribLocation(program, "a_Position");
+            //缓冲区
+            var vertices = new Float32Array([
+                0.0, 0.5, -0.5, -0.5, 0.5, -0.5
+            ]);
+            //正方形数据
+            var vertices1 = new Float32Array([-0.5, 0.5, -0.5, -0.5,
+                0.5, 0.5,
+                0.5, -0.5
+            ]);
+            var n = 4; //点的个数
+            //创建缓冲区
+            var vertexBuffer = gl.createBuffer();
+            if (!vertexBuffer) {
+                console.log("Failed to createthe buffer object"); //缓冲区创建失败
+                return -1;
+            }
+
+            //将缓冲区绑定到目标对象
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            //向缓冲区写入对象
+            gl.bufferData(gl.ARRAY_BUFFER, vertices1, gl.STATIC_DRAW);
+            //将缓冲区对象分配给a_Position; 参数一：传入数据；参数二：指定每个顶点传入多少个数（2表示只取两个数传入，剩下的两个数0.0和1.0补上；1.0是透明度，跟vertexAttrib2f()类似）
+            gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+            //连接a_Position变量与分配给它的缓冲区对象
+            gl.enableVertexAttribArray(a_Position);
+
+            //开始绘制，显示器显示结果;参数二：从哪个点开始绘制；参数三：绘制几个点
+            //TRIANGLES:一系列单独的三角形；绘制方式：（v0,v1,v2）,(v2,v1,v3),(v2,v3,v4)
+            //TRIANGLE_STRIP:一系列带状的三角形
+            //TRIANGLE_FAN:扇形绘制方式
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, n);
+        }
+    </script>
+</body>
+
+</html>

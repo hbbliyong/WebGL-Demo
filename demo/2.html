@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>绘制点</title>
+    <script id="vs" type="x-shader/x-vertex">
+        void main(void){ gl_PointSize=20.0; gl_Position=vec4(0,0,0,1.0); }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">
+        void main(void){ gl_FragColor =vec4(1.0,0.0,0.0,1.0); }
+    </script>
+</head>
+
+<body>
+    <script>
+        onload = function() {
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+            gl.clearColor(0.0, 0, 0, 1);
+            gl.clearDepth(1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            //顶点着色器和片段着色器生成
+            var v_shader = create_shader("vs");
+            var f_shader = create_shader("fs");
+
+            var program = create_program(v_shader, f_shader);
+            gl.drawArrays(gl.POINT, 0, 1);
+
+            function create_program(v_shader, f_shader) {
+                var program = gl.createProgram();
+
+                gl.attachShader(program, v_shader);
+                gl.attachShader(program, f_shader);
+
+                gl.linkProgram(program);
+
+                //判断着色器的连接是否成功
+                if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    gl.useProgram(program);
+                    return program;
+                } else {
+                    alert(gl.getProgramInfoLog(program));
+                }
+            }
+
+            function create_shader(id) {
+                var shader;
+
+                var scriptElement = document.getElementById(id);
+                if (!scriptElement) {
+                    return;
+                }
+
+                switch (scriptElement.type) {
+                    //顶点着色器
+                    case 'x-shader/x-vertex':
+                        shader = gl.createShader(gl.VERTEX_SHADER);
+                        break;
+
+                        // 片段着色器的时候
+                    case 'x-shader/x-fragment':
+                        shader = gl.createShader(gl.FRAGMENT_SHADER);
+                        break;
+                    default:
+                        return;
+                }
+                //将标签中的代码分配给生成的着色器
+                gl.shaderSource(shader, scriptElement.text);
+                gl.compileShader(shader);
+
+                //判断着色器是否编译成功
+                if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    return shader;
+                } else {
+                    alert(gl.getShaderInfoLog(shader));
+                }
+
+            }
+        }
+    </script>
+</body>
+
+</html>

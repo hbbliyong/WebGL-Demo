@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>多彩三角形</title>
+    <script src="js/utils.js"></script>
+    <script src="js/gl-matrix.js"></script>
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec3 position; attribute vec4 color; uniform mat4 mvpMatrix; varying vec4 vColor; void main(void){ vColor=color; gl_Position=mvpMatrix*vec4(position,1.0); }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">
+        precision mediump float; varying vec4 vColor; void main(void){ gl_FragColor =vColor; }
+    </script>
+</head>
+
+<body>
+    <div>
+
+    </div>
+    <script>
+        onload = function() {
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+            /*清空画板上的颜色，并初始化颜色*/
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            //设定canvas初始化时候的深度
+            gl.clearDepth(1.0);
+            //清空画面上的颜色
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            var utils = new Utils(gl);
+            //顶点着色器和片段着色器生成
+            var v_shader = utils.create_shader("vs");
+            var f_shader = utils.create_shader("fs");
+
+            var program = utils.create_program(v_shader, f_shader);
+            //获取a_Position变量的存储位置
+            var attLocation = gl.getAttribLocation(program, "position");
+            var attLocationColor = gl.getAttribLocation(program, "color");
+            //attribute的元素数量（这次只使用xyz,所有是3）
+            var attStride = 3;
+            // 模型（顶点）数据
+            var vertex_position = [
+                0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, -1.0, 0.0, 0.0
+            ];
+
+            // 保存顶点的颜色情报的数组
+            var vertex_color = [
+                1.0, 0.0, 0.0, 1.0,
+                0.0, 1.0, 0.0, 1.0,
+                0.0, 0.0, 1.0, 1.0
+            ];
+
+            var vbo = utils.create_vbo(vertex_position);
+            gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+            gl.enableVertexAttribArray(attLocation);
+            gl.vertexAttribPointer(attLocation, attStride, gl.FLOAT, false, 0, 0);
+
+            /*把colors 生成vbo*/
+            var color_vbo = utils.create_vbo(vertex_color);
+            gl.bindBuffer(gl.ARRAY_BUFFER, color_vbo);
+            gl.enableVertexAttribArray(attLocationColor);
+            gl.vertexAttribPointer(attLocationColor, 4, gl.FLOAT, false, 0, 0);
+
+
+
+            var m = glMatrix.mat4;
+
+            // 各种矩阵的生成和初始化
+            var mMatrix = m.identity(m.create());
+            var vMatrix = m.identity(m.create());
+            var pMatrix = m.identity(m.create());
+            var mvpMatrix = m.identity(m.create());
+
+            m.lookAt([0.0, 1.0, 3.0], [0, 0, 0], [0, 1, 0], vMatrix);
+
+            // 投影坐标变换矩阵
+            m.perspective(pMatrix, 45, canvas.width / canvas.height, 0.1, 100);
+
+
+            // 各矩阵相乘，得到最终的坐标变换矩阵
+            m.multiply(pMatrix, vMatrix, mvpMatrix);
+            m.multiply(mvpMatrix, mMatrix, mvpMatrix);
+
+            // uniformLocation的获取，获取的是着色器里的mvpMatrix的变量
+            var uniLocation = gl.getUniformLocation(program, 'mvpMatrix');
+
+            // 向uniformLocation中传入坐标变换矩阵
+            /*一个参数是uniform变量的序号，第二个参数是矩阵是否进行转置（true的话，有时候程序会崩溃），第三个参数是实际的坐标变换矩阵。*/
+            gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+
+            // 绘制模型
+            /*第一个参数是指定如何使用顶点进行绘图的一个常量，第二个参数是从第几个顶点开始使用，第三个参数是绘制几个顶点。*/
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+            // context的刷新
+            gl.flush();
+        }
+    </script>
+</body>
+
+</html>
