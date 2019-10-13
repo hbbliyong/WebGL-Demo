@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<title>使用传统方法绘制立方体</title>
+<script src="js/utils.js"></script>
+<script id="vs" type="x-shader/x-vertex">
+    attribute vec4 pos; void main(void){ gl_Position=pos; gl_PointSize=10.0; }
+</script>
+<script id="fs" type="x-shader/x-fragment">
+    void main(void){ gl_FragColor=vec4(0.0,1.0,1.0,1.0); }
+</script>
+
+<body>
+    <script>
+        onload = function() {
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+
+            gl.clearColor(.5, .5, 0.1, 1.0);
+            gl.clearDepth(1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            var utils = new Utils(gl);
+
+            var program = utils.create_program();
+            var pos = gl.getAttribLocation(program, "pos");
+            var x = .0,
+                y = 0.2;
+            for (let i = 0; i < 10; i++) {
+                x += .05;
+                y += .05;
+                gl.vertexAttrib4f(pos, x, y, 1.0, 1.0);
+
+                gl.drawArrays(gl.POINTS, 0, 1);
+            }
+
+            var N = 100;
+            var vertexData = [.0, .0];
+            var r = .5;
+
+            for (let i = 0; i <= N; i++) {
+                var theta = i * 2 * Math.PI / N;
+                var x = r * Math.sin(theta);
+                var y = r * Math.cos(theta);
+                vertexData.push(x, y);
+            }
+
+            var vertices = new Float32Array(vertexData);
+            var buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(pos);
+
+            gl.drawArrays(gl.TRIANGLE_FAN, 0, vertices.length / 2);
+
+        }
+    </script>
+</body>
+
+</html>

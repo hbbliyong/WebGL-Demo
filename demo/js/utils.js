@@ -8,30 +8,31 @@ class Utils {
          * @param {片元着色器} f_shader 
          */
     create_program(v_shader, f_shader) {
-        //程序对象的生成
-        var program = this.gl.createProgram();
-        //向程序对象里分配着色器
-        this.gl.attachShader(program, v_shader);
-        this.gl.attachShader(program, f_shader);
 
-        //将着色器连接
-        this.gl.linkProgram(program);
 
-        //判断着色器的连接是否成功
-        if (this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
-            // 成功的话，将程序对象设置为有效
-            this.gl.useProgram(program);
-            // 返回程序对象
-            return program;
-        } else {
-            alert(this.gl.getProgramInfoLog(program));
+            //程序对象的生成
+            var program = this.gl.createProgram();
+            //向程序对象里分配着色器
+            this.gl.attachShader(program, v_shader || this.create_shader("vs"));
+            this.gl.attachShader(program, f_shader || this.create_shader("fs"));
+
+            //将着色器连接
+            this.gl.linkProgram(program);
+
+            //判断着色器的连接是否成功
+            if (this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
+                // 成功的话，将程序对象设置为有效
+                this.gl.useProgram(program);
+                // 返回程序对象
+                return program;
+            } else {
+                alert(this.gl.getProgramInfoLog(program));
+            }
         }
-    }
-
-    /**
-     * 生成着色器
-     * @param {Id} id 
-     */
+        /**
+         * 生成着色器
+         * @param {Id} id 
+         */
     create_shader(id) {
         //用来保存着色器的变量
         var shader;
