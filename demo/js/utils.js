@@ -74,13 +74,24 @@ class Utils {
      * @param {data} data 
      */
     create_vbo(data) {
-        var vbo = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vbo);
-        // 向缓存中写入数据；gl.STATIC_DRAW这个常量，定义了这个缓存中内容的更新频率
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(data), this.gl.STATIC_DRAW);
-        // 将绑定的缓存设为无效；这是为了防止WebGL中的缓存一致保留，而出现和预想不一致的情况
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+            var vbo = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vbo);
+            // 向缓存中写入数据；gl.STATIC_DRAW这个常量，定义了这个缓存中内容的更新频率
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(data), this.gl.STATIC_DRAW);
+            // 将绑定的缓存设为无效；这是为了防止WebGL中的缓存一致保留，而出现和预想不一致的情况
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
-        return vbo;
+            return vbo;
+        }
+        /**
+         * 创建并绑定buffer
+         * @param {顶点数组 [0.1,1.0,2.0]} bufferData 
+         */
+    makeBuffer(bufferData) {
+        var buffer = new this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(bufferData), this.gl.STATIC_DRAW);
+
+        return buffer;
     }
 }

@@ -33,13 +33,7 @@
             var color = gl.getAttribLocation(program, "color");
             var x = .0,
                 y = .2;
-            for (let i = 0; i < 10; i++) {
-                x += .05;
-                y += .05;
-                gl.vertexAttrib4f(pos, x, y, 1.0, 1.0);
-                gl.vertexAttrib4f(color, x, y, .1, 1.0);
-                gl.drawArrays(gl.POINTS, 0, 1);
-            }
+     
 
             var N = 50;
             var vertexData = [.0, .0];
@@ -51,25 +45,56 @@
                 var y = r * Math.cos(theta);
                 vertexData.push(x, y);
             }
-
+//表盘
             var vertices = new Float32Array(vertexData);
             var buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
             gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
             gl.enableVertexAttribArray(pos);
-			console.log(vertices);
-            gl.drawArrays(gl.LINE_LOOP, 0, vertices.length / 2);
 
+            gl.drawArrays(gl.LINE_LOOP, 0, vertices.length / 2);
+			
+			
+			gl.vertexAttrib4f(color, 1.0, 0.0, .1, 1.0);
             //画时、分、妙
-            var hps = new Float32Array([.0, .0, .4, 0]);
-            var hbuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, hbuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, hps, gl.STATIC_DRAW);
-            gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(pos);
-            gl.vertexAttrib4f(color, 1.0, 0.0, .1, 1.0);
-            gl.drawArrays(gl.LINES, 0, 2);
+			var sr=.4;
+			for(let i=0;i<60;i++){
+				var theta = i * 2 * Math.PI / 60;
+				var x = sr * Math.sin(theta);
+				var y = sr * Math.cos(theta);
+				var hps = new Float32Array([.0, .0, x, y]);
+				var hbuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, hbuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, hps, gl.STATIC_DRAW);
+				gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+				gl.enableVertexAttribArray(pos);
+				
+				gl.drawArrays(gl.LINES, 0, 2);
+			}
+			var i=0;
+			setInterval(function(){
+				let theta = i * 2 * Math.PI / 60;
+				let x = sr * Math.sin(theta);
+				let y = sr * Math.cos(theta);
+				let hps = new Float32Array([.0, .0, x, y]);
+				let hbuffer = gl.createBuffer();
+				gl.bindBuffer(gl.ARRAY_BUFFER, hbuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, hps, gl.STATIC_DRAW);
+				gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+				gl.enableVertexAttribArray(pos);
+				
+				gl.drawArrays(gl.LINES, 0, 2);
+				//console.log(i)
+				if(i++==59)i=0;
+				},
+				1000);
+				var xxx=1;
+				function animate(){
+					console.log(xxx++);
+					requestAnimationFrame(animate);
+				}
+        // animate();
         }
     </script>
 </body>
