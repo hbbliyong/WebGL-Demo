@@ -88,7 +88,7 @@ class Utils {
          * @param {顶点数组 [0.1,1.0,2.0]} bufferData 
          */
     makeBuffer(bufferData) {
-        var buffer = new this.gl.createBuffer();
+        var buffer =  this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(bufferData), this.gl.STATIC_DRAW);
 

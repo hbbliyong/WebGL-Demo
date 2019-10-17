@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>设置个点尺寸</title>
+    <script src="js/utils.js"></script>
+    <script src="js/gl-matrix.js"></script>
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec4 position; attribute float pointSize; void main(void){ gl_PointSize=pointSize; gl_Position=position; }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">
+        void main(void){ gl_FragColor =vec4(1.0,0.0,0.0,1.0); }
+    </script>
+</head>
+
+<body>
+    <div>
+
+    </div>
+    <script>
+        onload = function() {
+            document.addEventListener("keydown", onkeydown);
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+            /*清空画板上的颜色，并初始化颜色*/
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            //设定canvas初始化时候的深度
+            gl.clearDepth(1.0);
+            //清空画面上的颜色
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            var utils = new Utils(gl);
+            //顶点着色器和片段着色器生成
+            var v_shader = utils.create_shader("vs");
+            var f_shader = utils.create_shader("fs");
+
+            var program = utils.create_program(v_shader, f_shader);
+            //获取a_Position变量的存储位置
+            var position = gl.getAttribLocation(program, "position");
+            var pointSize = gl.getAttribLocation(program, "pointSize");
+
+
+            //创建缓冲区
+            var vertices = new Float32Array([
+                0.0, 0.5, 10.0, -0.5, -0.5,20.0, 0.5, -0.5,30.0
+            ]);
+ 
+            var n = 3; //点的个数
+
+            var vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+			
+			//得到数组中每个元素的大小（字节数）
+			var FSIZE=vertices.BYTES_PER_ELEMENT;
+			
+		//将缓冲区对象分配给a_Position; 参数一：传入数据；参数二：指定每个顶点传入多少个数（2表示只取两个数传入，剩下的两个数0.0和1.0补上；1.0是透明度，跟vertexAttrib2f()类似）
+		//参数五：相邻两个点字节数;传入的相当于一个点属性的字节大小，然后着色器根据这个获取；参数六：偏移数，从哪个开始；
+            gl.vertexAttribPointer(position, 2, gl.FLOAT, false, FSIZE*3, 0);
+            gl.enableVertexAttribArray(position);
+
+            /*------ 点尺寸的数据传入------*/
+			gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW);
+            gl.vertexAttribPointer(pointSize, 1, gl.FLOAT, false, FSIZE*3, FSIZE*2);
+            gl.enableVertexAttribArray(pointSize);
+
+            gl.drawArrays(gl.POINTS, 0, n);
+			console.log(FSIZE);
+            
+        }
+    </script>
+</body>
+
+</html>
