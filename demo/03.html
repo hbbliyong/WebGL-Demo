@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>根据鼠标点击创建点</title>
+    <script src="js/utils.js"></script>
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec4 a_Position; void main(void){ gl_PointSize=20.0; gl_Position=a_Position; }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">
+        void main(void){ gl_FragColor =vec4(1.0,0.0,0.0,1.0); }
+    </script>
+</head>
+
+<body>
+    <script>
+        onload = function() {
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+            /*清空画板上的颜色，并初始化颜色*/
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            //设定canvas初始化时候的深度
+            gl.clearDepth(1.0);
+            //清空画面上的颜色
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            var utils = new Utils(gl);
+
+            var program = utils.create_program();
+            //获取a_Position变量的存储位置
+            var a_Position = gl.getAttribLocation(program, "a_Position");
+            //将顶点位置传递给a_Position变量；
+            gl.vertexAttrib3f(a_Position, 1.0, 0.0, 0.0, 0.0); //后面的3f表示传3个float变量;数量的范围是1-4；不够会自动补上0.0，透明度（最后一个1.0补上）
+            //参数一：是绘制模式；参数二：表示从哪个点开始绘制；参数三：表示绘制几个点
+            gl.drawArrays(gl.POINT, 0, 1);
+
+            canvas.onmousedown = function(event) {
+                click(event);
+            };
+
+            var g_points = [];
+
+            function click(event) {
+                var e = event || window.event;
+                var x = e.clientX;
+                var y = e.clientY;
+                var rect = e.target.getBoundingClientRect();
+
+                x = ((x - rect.left) - canvas.height / 2) / (canvas.height / 2); //计算出x轴WebGL的浮点数
+                y = (canvas.width / 2 - (y - rect.top)) / (canvas.width / 2);
+
+                g_points.push({
+                    x: x,
+                    y: y
+                });
+
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
+                var len = g_points.length;
+                for (let i = 0; i < len; i++) {
+                    const element = g_points[i];
+
+                    gl.vertexAttrib3f(a_Position, element.x, element.y, 0.0);
+                    gl.drawArrays(gl.POINTS, 0, 1);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
