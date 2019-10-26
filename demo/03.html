@@ -48,9 +48,10 @@
 
             function click(event) {
                 var e = event || window.event;
-                var x = e.clientX;
+                var x = e.clientX; //获取鼠标的点距离浏览器窗口最左边的距离
                 var y = e.clientY;
-                var rect = e.target.getBoundingClientRect();
+                var rect = e.target.getBoundingClientRect(); //组件封装方法，返回对象，里面含有点击的标签的距离浏览器左侧、上侧、右侧、下侧和自身的高宽
+
 
                 x = ((x - rect.left) - canvas.height / 2) / (canvas.height / 2); //计算出x轴WebGL的浮点数
                 y = (canvas.width / 2 - (y - rect.top)) / (canvas.width / 2);

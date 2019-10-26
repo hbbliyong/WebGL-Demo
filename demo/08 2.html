@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>变换--旋转+平移+缩放</title>
+    <script src="js/utils.js"></script>
+    <script src="js/cuon-matrix.js"></script>
+    <script id="vs" type="x-shader/x-vertex">
+        attribute vec4 position; uniform mat4 u_xformMatrix; void main(void){ gl_Position= u_xformMatrix * position; }
+    </script>
+
+    <script id="fs" type="x-shader/x-fragment">
+        void main(void){ gl_FragColor =vec4(1.0,0.0,0.0,1.0); }
+    </script>
+</head>
+
+<body>
+    <script>
+        onload = function() {
+            document.addEventListener("keydown", onkeydown);
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+            /*清空画板上的颜色，并初始化颜色*/
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            //设定canvas初始化时候的深度
+            gl.clearDepth(1.0);
+            //清空画面上的颜色
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            var utils = new Utils(gl);
+
+            var program = utils.create_program();
+            //获取a_Position变量的存储位置
+            var attLocation = gl.getAttribLocation(program, "position");
+            var u_xformMatrix = gl.getUniformLocation(program, "u_xformMatrix");
+
+            //创建缓冲区
+            var vertices = new Float32Array([
+                0.0, 0.5, -0.5, -0.5, 0.5, -0.5,
+            ]);
+            /*正方形数据*/
+            var vertices1 = new Float32Array([-0.5, 0.5, -0.5, -0.5,
+                0.5, 0.5,
+                0.5, -0.5
+            ]);
+            var n = 3; //点的个数
+
+            var vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+            gl.bufferData(gl.ARRAY_BUFFER, vertices1, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(attLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(attLocation);
+
+
+
+            function run() {
+                rotate();
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                /*第一个参数是指定如何使用顶点进行绘图的一个常量，第二个参数是从第几个顶点开始使用，第三个参数是绘制几个顶点。*/
+                gl.drawArrays(gl.TRIANGLES, 0, n);
+            }
+            var angle = 45;
+            //平移
+            var tx = 0.0,
+                ty = 0.0,
+                tz = .0;
+            //缩放
+            var sx = 1.0,
+                sy = 1.0,
+                sz = 1.0;
+
+            var modelMatrix = new Matrix4();
+
+            function rotate() {
+                modelMatrix.setRotate(angle, 0, 0, 1);
+                modelMatrix.translate(tx, ty, tz);
+                gl.uniformMatrix4fv(u_xformMatrix, false, modelMatrix.elements);
+
+            }
+            run();
+            //设置定时器，进行定时更新
+            setInterval(function() {
+                angle++;
+                run();
+            }, 100);
+
+            function onkeydown(e) {
+                switch (e.keyCode) {
+                    case 37:
+                        tx -= .05;
+
+                        break;
+                    case 38:
+                        ty += .05;
+                        break;
+                    case 39:
+                        tx += .05;
+                        break;
+                    case 40:
+                        ty -= .05;
+                        break;
+                    case 87:
+                        sy += 0.05;
+                        break;
+                    case 83:
+                        sy -= 0.05;
+                        break;
+                    case 65:
+                        sx -= 0.05;
+                        break;
+                    case 68:
+                        sx += 0.05;
+                        break;
+
+                    default:
+                        break;
+                }
+                run();
+            }
+        }
+    </script>
+</body>
+
+</html>
