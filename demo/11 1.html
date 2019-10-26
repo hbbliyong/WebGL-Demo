@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>WebGL使用纹理贴图</title>
+    <title>WebGL进一步理解纹理映射 </title>
     <script src="js/utils.js"></script>
     <script src="js/gl-matrix.js"></script>
     <script id="vs" type="x-shader/x-vertex">
@@ -39,11 +39,11 @@
 
 
             //创建缓冲区
-            var vertices = new Float32Array([-0.5, 0.5, 0.0, 1.0,
+            var vertices = new Float32Array([-0.5, 0.5, -0.3, 1.7,
 
-                -0.5, -0.5, 0.0, 0.0,
-                0.5, 0.5, 1.0, 1.0,
-                0.5, -0.5, 1.0, 0.0,
+                -0.5, -0.5, -0.3, -0.2,
+                0.5, 0.5, 1.7, 1.7,
+                0.5, -0.5, 1.7, -0.2,
             ]);
 
             var n = 3; //点的个数
@@ -80,8 +80,11 @@
                 //设置纹理贴图填充方式(纹理贴图像素尺寸小于顶点绘制区域像素尺寸)
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 //设置纹理贴图填充方式(纹理贴图像素尺寸小于顶点绘制区域像素尺寸)
-                // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                //修改x轴为镜像对称式的重复纹理
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+                //修改了y轴使用纹理图像的边缘值
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
                 //设置像素格式，jpg格式对应gl.RGB
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
                 gl.uniform1i(u_Sampler, 0); //纹理缓冲区单元TEXTURE0中的颜色数据传入片元着色器

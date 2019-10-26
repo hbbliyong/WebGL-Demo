@@ -19,7 +19,7 @@ var verticesSizes = new Float32Array([
 前面两个数据是点的位置信息，第三个数是尺寸信息
 gl.vertexAttribPointer(position,2,gl.FLOAT,false,FSIZE*3,0);
 gl.vertexAttribPointer(pointSize,1,gl.FLOAT,false,FSIZE*3,FSIZE*2);
-FSIZE*3 是一个数据的大小，而一个数据包含了点位置和尺寸
+FSIZE*3 是一个数据组的大小，而一个数据包含了点位置和尺寸
 
 所以用 第六参数和第二参数去设置；FSIZE是得到数组中每个元素的大小（字节数）
 如：var FSIZE = verticesSizes.BYTES_PER_ELEMENT;//得到数组中每个元素的大小（字节数）
@@ -29,7 +29,8 @@ FSIZE*3 是一个数据的大小，而一个数据包含了点位置和尺寸
 传入到a_Position 缓冲区中，a_Position 缓冲区绑定到着色器里的a_Position;然后着色器才去一一执行； 如果还不明白，那我就简单比喻，就好比一个流水线一样，
 现在我用盒子把点和尺寸装起来，现在流水线上就是一个一个的盒子，告诉机器，一个盒子是一个点的信息，盒子里面的前两个是位置信息，
 后面一个是尺寸；这样就很好的区分，也把一个数据包装在一起；
-
+![1](/resources/imgs/vertexAttribPointer.png)
+![2](resources/imgs/vaps.png)
 [方式2](09.1.html)
 
 ### 10.设置各个点的颜色
@@ -78,3 +79,9 @@ FSIZE*3 是一个数据的大小，而一个数据包含了点位置和尺寸
     </script>
 ```
 这里注意设置：gl_PointSize=10.0;顶点大小，不然看不到效果
+
+### 11.WebGL使用纹理贴图
+[案例](https://blog.csdn.net/qq_30100043/article/details/72771864)
+
+#### 11.1 WebGL使用多幅纹理
+案例 11.2.html

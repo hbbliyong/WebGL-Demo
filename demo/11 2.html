@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>WebGL使用纹理贴图</title>
+    <title>WebGL使用多幅纹理</title>
     <script src="js/utils.js"></script>
     <script src="js/gl-matrix.js"></script>
     <script id="vs" type="x-shader/x-vertex">
@@ -10,7 +10,7 @@
     </script>
 
     <script id="fs" type="x-shader/x-fragment">
-        precision mediump float; uniform sampler2D u_Sampler; varying vec2 v_TexCoord; void main(void){ gl_FragColor =texture2D(u_Sampler,v_TexCoord); }
+        precision mediump float; uniform sampler2D u_Sampler; uniform sampler2D u_Sampler1; varying vec2 v_TexCoord; void main(void){ vec4 color=texture2D(u_Sampler,v_TexCoord); vec4 color1=texture2D(u_Sampler1,v_TexCoord); gl_FragColor =color*color1; }
     </script>
 </head>
 
@@ -20,7 +20,6 @@
     </div>
     <script>
         onload = function() {
-            document.addEventListener("keydown", onkeydown);
             const canvas = document.createElement('canvas');
             document.querySelector('body').appendChild(canvas);
 
@@ -64,15 +63,34 @@
 
 
             var u_Sampler = gl.getUniformLocation(program, "u_Sampler");
+            var u_Sampler1 = gl.getUniformLocation(program, "u_Sampler1");
 
             var image = new Image();
-            image.onload = texture;
-            image.src = './resources/imgs/disturb.jpg';
+            var image1 = new Image();
+            image.onload = function() {
+                loadTexture(u_Sampler, image, 0);
+            };
+            image1.onload = function() {
+                loadTexture(u_Sampler1, image1, 1);
+            }
+            image.src = './resources/imgs/blueflower.jpg';
+            image1.src = './resources/imgs/circle.gif';
 
-            function texture() {
+            var g_texUnit = false,
+                g_texUnit1 = false;
+
+            function loadTexture(sampler, image, texUnit) {
                 var texture = gl.createTexture(); //创建纹理图像缓冲区
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); //纹理图片上下反转(Y轴反转)
-                gl.activeTexture(gl.TEXTURE0) //激活开启0号纹理单元
+
+                if (texUnit == 0) {
+                    gl.activeTexture(gl.TEXTURE0) //激活开启0号纹理单元
+                    g_texUnit = true;
+                } else if (texUnit == 1) {
+                    gl.activeTexture(gl.TEXTURE1);
+                    g_texUnit1 = true;
+                }
+
 
                 //向target绑定纹理对象
                 gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -81,20 +99,22 @@
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 //设置纹理贴图填充方式(纹理贴图像素尺寸小于顶点绘制区域像素尺寸)
                 // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.NEAREST);
+                // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.NEAREST);
                 //设置像素格式，jpg格式对应gl.RGB
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-                gl.uniform1i(u_Sampler, 0); //纹理缓冲区单元TEXTURE0中的颜色数据传入片元着色器
+                gl.uniform1i(sampler, texUnit); //纹理缓冲区单元TEXTURE0中的颜色数据传入片元着色器
 
+                if (g_texUnit && g_texUnit1) {
 
-                /*清空画板上的颜色，并初始化颜色*/
-                gl.clearColor(0.0, 0.0, 0.0, 1.0);
-                //设定canvas初始化时候的深度
-                gl.clearDepth(1.0);
-                //清空画面上的颜色
-                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                    /*清空画板上的颜色，并初始化颜色*/
+                    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+                    //设定canvas初始化时候的深度
+                    gl.clearDepth(1.0);
+                    //清空画面上的颜色
+                    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                }
             }
         }
     </script>
