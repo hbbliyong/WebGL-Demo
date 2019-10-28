@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebGL从指定视点观察旋转后的三角形</title>
+    <style>
+        body {
+            margin: 0;
+            text-align: center;
+        }
+        
+        canvas {
+            margin: 0;
+        }
+    </style>
+    <script src="../js/lib/cuon-matrix.js"></script>
+    <script src="../js/lib/webgl-debug.js"></script>
+    <script src="../js/lib/webgl-utils.js"></script>
+    <script src="../js/lib/cuon-utils.js"></script>
+</head>
+
+<body>
+    <div>
+
+    </div>
+    <script>
+        var g_eyeX = 0.20,
+            g_eyeY = 0.25,
+            g_eyeZ = 0.25,
+            onload = function() {
+                //顶点着色器
+                var VSHADER_SOURCE = "" +
+                    "attribute vec4 a_Position;\n" +
+                    "attribute vec4 a_Color;\n" +
+                    "uniform mat4 u_ModelViewMatrix;\n" +
+
+                    "varying vec4 v_Color;\n" +
+                    "void main(){" +
+                    "   gl_Position = u_ModelViewMatrix*a_Position;\n" +
+                    "   v_Color = a_Color;\n" +
+                    "}\n";
+
+                var FSHADER_SOURCE = "" +
+                    "#ifdef GL_ES\n" +
+                    "precision mediump float;\n" +
+                    "#endif\n" +
+                    "varying vec4 v_Color;\n" +
+                    "void main(){" +
+                    "   gl_FragColor = v_Color;\n" +
+                    "}\n";
+
+
+                const canvas = document.createElement('canvas');
+                document.querySelector('body').appendChild(canvas);
+
+                canvas.width = 500;
+                canvas.height = 500;
+
+                const gl = getWebGLContext(canvas, true);;
+
+
+                //初始化着色器
+                if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
+                    console.log("无法初始化着色器");
+                    return;
+                }
+
+                var n = initVertexBuffers(gl);
+
+                var u_ViewMatrix = gl.getUniformLocation(gl.program, "u_ModelViewMatrix");
+
+                gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+                draw(gl, n, u_ViewMatrix);
+
+                document.onkeydown = function(event) {
+                    keydown(event, gl, n, u_ViewMatrix);
+                }
+
+            }
+
+        function initVertexBuffers(gl) {
+            //创建缓冲区
+            var verticesColors = new Float32Array([
+                //顶点的坐标和颜色
+                0.0, 0.5, -0.4, 0.4, 1.0, 0.4, // 绿色三角形，在最后面的三个点
+                -0.5, -0.5, -0.4, 0.4, 1.0, 0.4,
+                0.5, -0.5, -0.4, 1.0, 0.4, 0.4,
+
+                0.5, 0.4, -0.2, 1.0, 0.4, 0.4, // 黄色三角形，在中间的三个点
+                -0.5, 0.4, -0.2, 1.0, 1.0, 0.4,
+                0.0, -0.6, -0.2, 1.0, 1.0, 0.4,
+
+                0.0, 0.5, 0.0, 0.4, 0.4, 1.0, // 蓝色三角形，在最前面的三个点
+                -0.5, -0.5, 0.0, 0.4, 0.4, 1.0,
+                0.5, -0.5, 0.0, 1.0, 0.4, 0.4
+            ]);
+
+            //获取a_Position变量的存储位置
+            var position = gl.getAttribLocation(gl.program, "a_Position");
+            var aColor = gl.getAttribLocation(gl.program, "a_Color");
+
+
+            var n = 9; //点的个数
+            var FSIZE = verticesColors.BYTES_PER_ELEMENT;
+
+            var vertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, verticesColors, gl.STATIC_DRAW);
+
+            gl.vertexAttribPointer(position, 3, gl.FLOAT, false, FSIZE * 6, 0);
+            gl.enableVertexAttribArray(position);
+
+            gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, FSIZE * 6, FSIZE * 3);
+            gl.enableVertexAttribArray(aColor);
+
+            return n;
+        }
+
+        function keydown(event, gl, n, u_ModelViewMatrix) {
+            if (event.keyCode == 39) {
+                g_eyeX += 0.01;
+            } else if (event.keyCode == 37) {
+                g_eyeX -= 0.01;
+            } else if (event.keyCode == 38) {
+                g_eyeY += 0.01;
+            } else if (event.keyCode == 40) {
+                g_eyeY -= 0.01;
+            } else {
+                return;
+            }
+
+            draw(gl, n, u_ModelViewMatrix);
+        }
+
+        function draw(gl, n, u_ModelViewMatrix) {
+            //设置视角矩阵的相关信息（视点，视线，上方向）
+            var viewMatrix = new Matrix4();
+            viewMatrix.setLookAt(g_eyeX, g_eyeY, g_eyeZ, 0, 0, 0, 0, 1, 0);
+
+            var modelMatrix = new Matrix4();
+            modelMatrix.setRotate(-10, 0, 0, 1);
+
+            var modelViewMatrix = viewMatrix.multiply(modelMatrix);
+            gl.uniformMatrix4fv(u_ModelViewMatrix, false, modelViewMatrix.elements);
+
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.TRIANGLES, 0, n);
+        }
+    </script>
+</body>
+
+</html>
