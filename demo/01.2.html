@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<title>使用传统方法绘制立方体</title>
+<script src="js/utils.js"></script>
+<script src="js/cuon-matrix.js" type="text/javascript" charset="utf-8"></script>
+<script id="vs" type="x-shader/x-vertex">
+    attribute vec4 pos; attribute vec4 color; uniform mat4 a_matrix; varying vec4 v_color; void main(void){ gl_Position=a_matrix*pos; gl_PointSize=10.0; v_color=color;}
+</script>
+<script id="fs" type="x-shader/x-fragment">
+    precision mediump float; varying vec4 v_color; void main(void){ gl_FragColor=v_color; }
+</script>
+
+<body>
+    <script>
+        onload = function() {
+            const canvas = document.createElement('canvas');
+            document.querySelector('body').appendChild(canvas);
+
+
+
+            canvas.width = 500;
+            canvas.height = 500;
+
+            const gl = canvas.getContext('webgl');
+
+            gl.clearColor(.5, .5, 0.1, 1.0);
+            gl.clearDepth(1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            var utils = new Utils(gl);
+
+            var program = utils.create_program();
+            var pos = gl.getAttribLocation(program, "pos");
+            var matrix = gl.getUniformLocation(program, "a_matrix");
+            var color = gl.getAttribLocation(program, "color");
+
+            var mat = new Matrix4();
+            mat.setIdentity();
+
+            gl.uniformMatrix4fv(matrix, false, mat.elements);
+            var x = .0,
+                y = .2;
+
+
+            var N = 50;
+            var vertexData = [.0,.0];
+            var r = .5;
+            var sr = .4;
+            for (let i = 0; i <= N; i++) {
+                var theta = i * 2 * Math.PI / N;
+                var x = r * Math.sin(theta);
+                var y = r * Math.cos(theta);
+                vertexData.push(x, y);
+            }
+            vertexData.push(.0, .0);
+            vertexData.push(.0, sr);
+            //表盘
+            var vertices = new Float32Array(vertexData);
+            var buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(pos);
+
+            // gl.drawArrays(gl.LINE_LOOP, 0, vertices.length / 2);
+
+
+            gl.vertexAttrib4f(color, 1.0, 0.0, .1, 1.0);
+            //画时、分、妙
+
+            // for(let i=0;i<60;i++){
+            // 	var theta = i * 2 * Math.PI / 60;
+            // 	var x = sr * Math.sin(theta);
+            // 	var y = sr * Math.cos(theta);
+            // 	var hps = new Float32Array([.0, .0, x, y]);
+            // 	var hbuffer = gl.createBuffer();
+            // 	gl.bindBuffer(gl.ARRAY_BUFFER, hbuffer);
+            // 	gl.bufferData(gl.ARRAY_BUFFER, hps, gl.STATIC_DRAW);
+            // 	gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+            // 	gl.enableVertexAttribArray(pos);
+
+            // 	gl.drawArrays(gl.LINES, 0, 2);
+            // }
+            var i = 0;
+
+
+            setInterval(function() {
+                    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                    let theta = i * 2 * Math.PI / 60;
+                    let x = sr * Math.sin(theta);
+                    let y = sr * Math.cos(theta);
+                    mat.rotate(-theta, .0, .0, 1.0);
+                    gl.drawArrays(gl.LINE_LOOP, 0, vertices.length / 2 - 2);
+
+                    gl.uniformMatrix4fv(matrix, false, mat.elements);
+
+                    gl.drawArrays(gl.LINES, vertices.length - 5, 2);
+
+
+                    //console.log(i)
+                    if (i++ == 59) i = 0;
+                },
+                100);
+            var xxx = 1;
+
+            function animate() {
+                console.log(xxx++);
+                requestAnimationFrame(animate);
+            }
+            // animate();
+        }
+    </script>
+</body>
+
+</html>
