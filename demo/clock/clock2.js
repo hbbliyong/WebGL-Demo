@@ -49,7 +49,7 @@ function main() {
 
     // Start drawing
     var draws;
-    function drawie(){draws=setInterval(draw,1000, gl, numSlices)}
+    function drawie(){draws=setInterval(draw,100, gl, numSlices)}
     drawie();
     
  // Register function (event handler) to be called on a mouse press
