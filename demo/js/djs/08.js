@@ -27,8 +27,8 @@ const FSHADER_SOURCE = `
 function main() {
     //const canvas = document.createElement('canvas');
     const vanvas = document.getElementById('canvas');
-    canvas.width = 200;
-    canvas.height = 200;
+    canvas.width = 500;
+    canvas.height = 300;
 
     var gl = getWebGLContext(canvas);
 
@@ -56,7 +56,10 @@ function main() {
 //声明全局变量
 var angle_step = 3.0; //每一次点击触发事件旋转角度（度）的增量
 var g_arm1Angle = -90.0; //arm1的旋转角度（度）
-var g_joint1Angle = 0.0; //joint1的旋转角度（度）
+var g_joint1Angle = -45.0; //joint1的旋转角度（度
+var g_joint2Angle = 0.0; //joint2的当前角度
+var g_joint3Angle = 0.0; //joint3的当前角度
+
 
 
 function keydown(event, gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
@@ -83,14 +86,14 @@ function keydown(event, gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
 function initVertexBuffers(gl) {
     // Vertex coordinates（长方体3宽度，高度10，长度3，其原点在其底部）
     var vertices = new Float32Array([
-        1.5, 10.0, 1.5, -1.5, 10.0, 1.5, -1.5, 0.0, 1.5, 1.5, 0.0, 1.5, // v0-v1-v2-v3 front
-        1.5, 10.0, 1.5, 1.5, 0.0, 1.5, 1.5, 0.0, -1.5, 1.5, 10.0, -1.5, // v0-v3-v4-v5 right
-        1.5, 10.0, 1.5, 1.5, 10.0, -1.5, -1.5, 10.0, -1.5, -1.5, 10.0, 1.5, // v0-v5-v6-v1 up
-        -1.5, 10.0, 1.5, -1.5, 10.0, -1.5, -1.5, 0.0, -1.5, -1.5, 0.0, 1.5, // v1-v6-v7-v2 left
-        -1.5, 0.0, -1.5, 1.5, 0.0, -1.5, 1.5, 0.0, 1.5, -1.5, 0.0, 1.5, // v7-v4-v3-v2 down
-        1.5, 0.0, -1.5, -1.5, 0.0, -1.5, -1.5, 10.0, -1.5, 1.5, 10.0, -1.5 // v4-v7-v6-v5 back
-    ]);
+        0.5, 1.0, 0.5, -0.5, 1.0, 0.5, -0.5, 0.0, 0.5, 0.5, 0.0, 0.5, // v0-v1-v2-v3 front
+        0.5, 1.0, 0.5, 0.5, 0.0, 0.5, 0.5, 0.0, -0.5, 0.5, 1.0, -0.5, // v0-v3-v4-v5 right
+        0.5, 1.0, 0.5, 0.5, 1.0, -0.5, -0.5, 1.0, -0.5, -0.5, 1.0, 0.5, // v0-v5-v6-v1 up
+        -0.5, 1.0, 0.5, -0.5, 1.0, -0.5, -0.5, 0.0, -0.5, -0.5, 0.0, 0.5, // v1-v6-v7-v2 left
+        -0.5, 0.0, -0.5, 0.5, 0.0, -0.5, 0.5, 0.0, 0.5, -0.5, 0.0, 0.5, // v7-v4-v3-v2 down
+        0.5, 0.0, -0.5, -0.5, 0.0, -0.5, -0.5, 1.0, -0.5, 0.5, 1.0, -0.5 // v4-v7-v6-v5 back
 
+    ]);
     // Normal
     var normals = new Float32Array([
         0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, // v0-v1-v2-v3 front
@@ -153,24 +156,46 @@ var g_modelMatrix = new Matrix4(),
     g_mvpMatrix = new Matrix4();
 
 function draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
+    //绘制底色
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    var arm1Length = 10.0;
+    //绘制基座
+    var baseHeight = 2.0; //基座的高度
     g_modelMatrix.setTranslate(0.0, -12.0, 0.0);
-    g_modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);
-    drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 
-    //第二节胳膊
-    g_modelMatrix.translate(0.0, arm1Length, 0.0); //将图形移动到joint1的位置
+    drawBox(gl, n, 10.0, baseHeight, 10.0, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+
+
+    var arm1Length = 10.0; //第一节胳膊的长度
+    g_modelMatrix.translate(0.0, baseHeight, 0.0);
+    g_modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0); //围绕y轴旋转
+
+    drawBox(gl, n, 3.0, arm1Length, 3.0, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+
+    // var arm1Length = 10.0; //第一节胳膊的长度
+    g_modelMatrix.translate(0.0, arm1Length, 0.0);
     g_modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0); //围绕z轴旋转
-    g_modelMatrix.scale(1.3, 1.0, 1.3); //缩放
-    drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 
+    drawBox(gl, n, 4.0, arm1Length, 4.0, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+}
+var g_matrixStack = []; //存储矩阵的值
+
+function pushMatrix(m) {
+    var m2 = new Matrix4(m);
+    g_matrixStack.push(m2);
 }
 
+function popMatrix() {
+    return g_matrixStack.pop();
+}
 var g_normalMatrix = new Matrix4();
 
-function drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
+function drawBox(gl, n, width, height, depth, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
+
+    pushMatrix(g_modelMatrix);
+
+    g_modelMatrix.scale(width, height, depth);
+
     g_mvpMatrix.set(viewProjMatrix);
     g_mvpMatrix.multiply(g_modelMatrix);
     gl.uniformMatrix4fv(u_MvpMatrix, false, g_mvpMatrix.elements);
@@ -181,4 +206,7 @@ function drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
     gl.uniformMatrix4fv(u_NormalMatrix, false, g_normalMatrix.elements);
 
     gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
+
+    g_modelMatrix = popMatrix();
+
 }
