@@ -1,3 +1,6 @@
+/**
+ * 下面是制作出来的案例，左右键，整个沿y轴旋转，上下键，沿joint1进行z轴旋转
+ */
 var VSHADER_SOURCE = `
     attribute vec4 a_Position;
     attribute vec4 a_Normal;
@@ -25,9 +28,11 @@ const FSHADER_SOURCE = `
 `;
 
 function main() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 500;
-    canvas.height = 500;
+    //const canvas = document.createElement('canvas');
+    const vanvas = document.getElementById('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+
     var gl = getWebGLContext(canvas);
 
     initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE);
@@ -154,8 +159,8 @@ function draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var arm1Length = 10.0;
-    g_modelMatrix.setTranslate(.0, -12.0, .0);
-    g_modelMatrix.rotate(g_arm1Angle, .0, 1.0, .0);
+    g_modelMatrix.setTranslate(0.0, -12.0, 0.0);
+    g_modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);
     drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 
     //第二节胳膊
@@ -163,7 +168,6 @@ function draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
     g_modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0); //围绕z轴旋转
     g_modelMatrix.scale(1.3, 1.0, 1.3); //缩放
     drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
-
 }
 
 var g_normalMatrix = new Matrix4();
@@ -175,7 +179,7 @@ function drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
 
     //获取模型矩阵的逆转置矩阵，并赋值u_NormalMatrix
     g_normalMatrix.setInverseOf(g_modelMatrix);
-    g_modelMatrix.transpose();
+    g_normalMatrix.transpose();
     gl.uniformMatrix4fv(u_NormalMatrix, false, g_normalMatrix.elements);
 
     gl.drawElements(gl.TRIANGLES, n, gl.UNSIGNED_BYTE, 0);
