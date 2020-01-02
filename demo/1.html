@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+    <script src="./js/gl-matrix.js"></script>
+</head>
+
 <body>
     <script>
         onload = function() {
@@ -16,6 +20,9 @@
 
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT);
+
+            var m4 = glMatrix.mat4.create();
+            glMatrix.mat4.ortho(m4, -100, 100, -100, 100, -100, 100);
         }
     </script>
 </body>

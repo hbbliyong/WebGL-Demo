@@ -27,8 +27,8 @@ const FSHADER_SOURCE = `
 function main() {
     //const canvas = document.createElement('canvas');
     const vanvas = document.getElementById('canvas');
-    canvas.width = 500;
-    canvas.height = 300;
+    canvas.width = 800;
+    canvas.height = 800;
 
     var gl = getWebGLContext(canvas);
 
@@ -172,7 +172,22 @@ function draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
 
     drawBox(gl, n, 3.0, arm1Length, 3.0, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 
-    // var arm1Length = 10.0; //第一节胳膊的长度
+    var arm2Length = 10.0; //第二节胳膊的长度
+    g_modelMatrix.translate(0.0, arm2Length, 0.0);
+    g_modelMatrix.rotate(g_joint1Angle, 0.0, 1.0, 0.0); //围绕z轴旋转
+    drawBox(gl, n, 4.0, arm1Length, 4.0, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+
+    var palmLength = 2.0;
+    g_modelMatrix.translate(0.0, palmLength, 0.0);
+    g_modelMatrix.rotate(g_joint2Angle, 0.0, 0.0, 1.0); //围绕z轴旋转
+
+    drawBox(gl, n, 2.0, palmLength, 2.0, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+    return;
+    g_modelMatrix.translate(0.0, arm1Length, 0.0);
+    g_modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0); //围绕z轴旋转
+
+    drawBox(gl, n, 4.0, arm1Length, 4.0, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+
     g_modelMatrix.translate(0.0, arm1Length, 0.0);
     g_modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0); //围绕z轴旋转
 
