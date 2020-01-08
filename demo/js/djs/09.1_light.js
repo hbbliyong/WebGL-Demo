@@ -1,12 +1,12 @@
 var VSHADER_SOURCE =
     `
 	attribute vec3 a_Position;
-	attribute vec3 a_VertexNormal;
+	attribute vec3 aVertexNormal;
 	attribute vec2 a_TextureCoordinates;
 	
     uniform mat4   u_MVMatrix;
 	uniform mat4   u_PMatrix;
-	uniform mat4   u_NMatrix;
+	uniform mat3   uNMatrix;
 
 	varying vec2   v_TextureCoordinates;
 	varying vec3 v_NormalEye;
@@ -14,8 +14,8 @@ var VSHADER_SOURCE =
     void main(){
 		vec4 vertexPositionEye4=u_MVMatrix*vec4(a_Position,1.0);
 		v_PositionEye3=vertexPositionEye4.xyz/vertexPositionEye4.w;
-		//计算出发现向量
-		v_NormalEye=normalize(uNMatrix*a_vertexNormal);
+		//计算出法线向量
+		v_NormalEye = normalize( uNMatrix * aVertexNormal);
 
         gl_Position=u_PMatrix*u_MVMatrix*vec4(a_Position,1.0);
         v_TextureCoordinates=a_TextureCoordinates;
@@ -39,7 +39,8 @@ const FSHADER_SOURCE =
 	uniform vec3 u_DiffuseLightColor;
 	//镜面反射光
 	uniform vec3 u_SpecularLightColor;
-
+    //聚光灯方向
+    uniform vec3 uSpotDirection;
 	uniform sampler2D u_Sampler;
 
 	const float shininess=32.0;
@@ -53,7 +54,7 @@ const FSHADER_SOURCE =
 		//将两个光源加到一起之后得到了当前的顶点的光照信息颜色
 		vec3 lightWeighting=u_AmbientLightColor+u_DiffuseLightColor*diffuseLightWeighting;
 
-		vec4 textelColor=texture2D(u_Sampler,v_TextureCoordinates);
+		vec4 texelColor=texture2D(u_Sampler,v_TextureCoordinates);
         gl_FragColor=vec4(lightWeighting.rgb*texelColor.rgb,texelColor.a);
     }
 `;
@@ -63,13 +64,6 @@ var mat4 = glMatrix.mat4;
 var pwgl = {};
 pwgl.ongoingImageLoads = [];
 
-var floorVertexPositionBuffer;
-var floorVertexIndexBuffer;
-var cubeVertexPositionBuffer;
-var cubeVertexIndexBuffer;
-
-var modelViewMatrix;
-var projectionMatrix;
 var modelViewMatrixStack;
 
 function main() {
@@ -94,13 +88,13 @@ function main() {
 
     pwgl.uniformSamplerLoc = gl.getUniformLocation(gl.program, "u_Sampler");
 
-    pwgl.vertexNormalAttributeLoc = gl.getAttribLocation(gl.program, "a_VertexNormal");
-    pwgl.uniformNormalMatrixLoc = gl.getUniformLocation(gl.program, "u_NMatrix");
-    pwgl.uniformLightPositionLoc = gl.getUniformLocation(gl.program, "u_LightPositon");
+    pwgl.vertexNormalAttributeLoc = gl.getAttribLocation(gl.program, "aVertexNormal");
+    pwgl.uniformNormalMatrixLoc = gl.getUniformLocation(gl.program, "uNMatrix");
+    pwgl.uniformLightPositionLoc = gl.getUniformLocation(gl.program, "u_LightPosition");
     pwgl.uniformAmbientLightColorLoc = gl.getUniformLocation(gl.program, "u_AmbientLightColor");
     pwgl.uniformDiffuseLightColorLoc = gl.getUniformLocation(gl.program, "u_DiffuseLightColor");
     pwgl.uniformSpecularLightColorLoc = gl.getUniformLocation(gl.program, "u_SpecularLightColor");
-
+    pwgl.uniformSpotDirectionLoc = gl.getUniformLocation(gl.program, "uSpotDirection");
     // 设定为数组类型的变量数据
     gl.enableVertexAttribArray(pwgl.vertexPositionAttributeLoc);
     gl.enableVertexAttribArray(pwgl.vertexTextureAttributeLoc);
@@ -108,12 +102,15 @@ function main() {
 
 
     //初始化矩阵
-    modelViewMatrix = glMatrix.mat4.create();
-    projectionMatrix = glMatrix.mat4.create();
+    pwgl.modelViewMatrix = glMatrix.mat4.create();
+    pwgl.projectionMatrix = glMatrix.mat4.create();
     modelViewMatrixStack = [];
 
     setupBuffers();
+
+    setupLights();
     setupTextures();
+
     draw();
     render();
 }
@@ -121,6 +118,7 @@ function main() {
 function setupBuffers() {
     setupFloorBuffers();
     setupCubeBuffers();
+
 }
 
 function setupFloorBuffers() {
@@ -222,6 +220,53 @@ function setupCubeBuffers() {
     pwgl.CUBE_VERTEX_POS_BUF_ITEM_SIZE = 3;
     pwgl.CUBE_VERTEX_POS_BUF_NUM_ITEMS = 24;
 
+    //法线数据
+    pwgl.cubeVertexNormalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, pwgl.cubeVertexNormalBuffer);
+
+    var cubeVertexNormals = [
+        // Front face
+        0.0, 0.0, 1.0, //v0
+        0.0, 0.0, 1.0, //v1
+        0.0, 0.0, 1.0, //v2
+        0.0, 0.0, 1.0, //v3
+
+        // Back face
+        0.0, 0.0, -1.0, //v4
+        0.0, 0.0, -1.0, //v5
+        0.0, 0.0, -1.0, //v6
+        0.0, 0.0, -1.0, //v7
+
+        // Left face
+        -1.0, 0.0, 0.0, //v8
+        -1.0, 0.0, 0.0, //v9
+        -1.0, 0.0, 0.0, //v10
+        -1.0, 0.0, 0.0, //v11
+
+        // Right face
+        1.0, 0.0, 0.0, //12
+        1.0, 0.0, 0.0, //13
+        1.0, 0.0, 0.0, //14
+        1.0, 0.0, 0.0, //15
+
+        // Top face
+        0.0, 1.0, 0.0, //v16
+        0.0, 1.0, 0.0, //v17
+        0.0, 1.0, 0.0, //v18
+        0.0, 1.0, 0.0, //v19
+
+        // Bottom face
+        0.0, -1.0, 0.0, //v20
+        0.0, -1.0, 0.0, //v21
+        0.0, -1.0, 0.0, //v22
+        0.0, -1.0, 0.0, //v23
+    ];
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cubeVertexNormals), gl.STATIC_DRAW);
+
+    pwgl.CUBE_VERTEX_NORMAL_BUF_ITEM_SIZE = 3;
+    pwgl.CUBE_VERTEX_NORMAL_BUF_NUM_ITEMS = 24;
+
     //UV数据
     pwgl.cubeVertexTextureCoordinateBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pwgl.cubeVertexTextureCoordinateBuffer);
@@ -286,6 +331,15 @@ function setupCubeBuffers() {
     pwgl.CUBE_VERTEX_INDEX_BUF_NUM_ITEMS = 36;
 }
 
+function setupLights() {
+    gl.uniform3fv(pwgl.uniformLightPositionLoc, [.0, 10.0, -10.0]);
+    gl.uniform3fv(pwgl.uniformAmbientLightColorLoc, [.3, .3, .3]);
+    gl.uniform3fv(pwgl.uniformDiffuseLightColorLoc, [.9, .9, .9]);
+    gl.uniform3fv(pwgl.uniformSpecularLightColorLoc, [.0, .0, .0]);
+
+    gl.uniform3fv(pwgl.uniformSpotDirectionLoc, [0.0, -1.0, 0.0]);
+}
+
 function setupTextures() {
     pwgl.woodTexture = gl.createTexture();
     loadImageForTexture("wood_128x128.jpg", pwgl.woodTexture);
@@ -332,27 +386,31 @@ function textureFinishedLoading(image, texture) {
 }
 
 function draw() {
-    glMatrix.mat4.perspective(projectionMatrix, 60 * Math.PI / 180, 1.0, 0.1, 100);
+    glMatrix.mat4.perspective(pwgl.projectionMatrix, 60 * Math.PI / 180, 1.0, 0.1, 100);
     //初始化模型视图矩阵
-    glMatrix.mat4.identity(modelViewMatrix);
-    glMatrix.mat4.lookAt(modelViewMatrix, [8, 5, -10], [0, 0, 0], [0, 1, 0]);
+    glMatrix.mat4.identity(pwgl.modelViewMatrix);
+    glMatrix.mat4.lookAt(pwgl.modelViewMatrix, [8, 5, -10], [0, 0, 0], [0, 1, 0]);
 
     uploadModelViewMatrixToShader();
     uploadProjectionMatrixToShader();
+    uploadNormalMatrixToShader();
     gl.uniform1i(pwgl.uniformSamplerLoc, 0);
+
     drawFloor(1, 0, 0, 1);
 
     pushModelViewMatrix();
-    glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [0, 1.1, 0]);
+    glMatrix.mat4.translate(pwgl.modelViewMatrix, pwgl.modelViewMatrix, [0, 1.1, 0]);
     uploadModelViewMatrixToShader();
+    uploadNormalMatrixToShader();
     drawTable();
     popModelViewMatrix();
 
     // 绘制桌子上的小盒子
     pushModelViewMatrix();
-    glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [0, 2.7, 0]);
-    glMatrix.mat4.scale(modelViewMatrix, modelViewMatrix, [.5, .5, .5]);
+    glMatrix.mat4.translate(pwgl.modelViewMatrix, pwgl.modelViewMatrix, [0, 2.7, 0]);
+    glMatrix.mat4.scale(pwgl.modelViewMatrix, pwgl.modelViewMatrix, [.5, .5, .5]);
     uploadModelViewMatrixToShader();
+    uploadNormalMatrixToShader();
     drawCube(pwgl.boxTexture);
     popModelViewMatrix();
 }
@@ -364,11 +422,19 @@ function render() {
 }
 
 function uploadModelViewMatrixToShader() {
-    gl.uniformMatrix4fv(pwgl.uniformMVMatrixLoc, false, modelViewMatrix);
+    gl.uniformMatrix4fv(pwgl.uniformMVMatrixLoc, false, pwgl.modelViewMatrix);
 }
 
 function uploadProjectionMatrixToShader() {
-    gl.uniformMatrix4fv(pwgl.uniformProjMatrixLoc, false, projectionMatrix);
+    gl.uniformMatrix4fv(pwgl.uniformProjMatrixLoc, false, pwgl.projectionMatrix);
+}
+
+function uploadNormalMatrixToShader() {
+    let normalMatrix = glMatrix.mat3.create();
+    glMatrix.mat3.fromMat4(normalMatrix, pwgl.modelViewMatrix);
+    glMatrix.mat3.invert(normalMatrix, normalMatrix);
+    glMatrix.mat3.transpose(normalMatrix, normalMatrix);
+    gl.uniformMatrix3fv(pwgl.uniformNormalMatrixLoc, false, normalMatrix);
 }
 
 function drawFloor(r, g, b, a) {
@@ -379,6 +445,9 @@ function drawFloor(r, g, b, a) {
     gl.vertexAttribPointer(pwgl.vertexTextureAttributeLoc, pwgl.FLOOR_VERTEX_TEX_COORD_BUF_ITEM_SIZE, gl.FLOAT, false, 0,
         0);
 
+    //法线
+    gl.bindBuffer(gl.ARRAY_BUFFER, pwgl.floorVertexNormalBuffer);
+    gl.vertexAttribPointer(pwgl.vertexNormalAttributeLoc, pwgl.FLOOR_VERTEX_Normal_BUF_ITEM_SIZE, gl.FLOAT, false, 0, 0);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, pwgl.groundTexture);
@@ -389,10 +458,10 @@ function drawFloor(r, g, b, a) {
 
 function drawTable() {
     pushModelViewMatrix();
-    glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 1.0, 0.0]);
-    glMatrix.mat4.scale(modelViewMatrix, modelViewMatrix, [2.0, 0.1, 2.0]);
+    glMatrix.mat4.translate(pwgl.modelViewMatrix, pwgl.modelViewMatrix, [0.0, 1.0, 0.0]);
+    glMatrix.mat4.scale(pwgl.modelViewMatrix, pwgl.modelViewMatrix, [2.0, 0.1, 2.0]);
     uploadModelViewMatrixToShader();
-
+    uploadNormalMatrixToShader();
     //绘制桌面
     drawCube(pwgl.woodTexture);
     popModelViewMatrix();
@@ -401,9 +470,11 @@ function drawTable() {
     for (let i = -1; i <= 1; i += 2) {
         for (let j = -1; j <= 1; j += 2) {
             pushModelViewMatrix();
-            glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [i * 1.9, -0.1, j * 1.9]);
-            glMatrix.mat4.scale(modelViewMatrix, modelViewMatrix, [.1, 1.0, .1]);
+            glMatrix.mat4.translate(pwgl.modelViewMatrix, pwgl.modelViewMatrix, [i * 1.9, -0.1, j * 1.9]);
+            glMatrix.mat4.scale(pwgl.modelViewMatrix, pwgl.modelViewMatrix, [.1, 1.0, .1]);
             uploadModelViewMatrixToShader();
+            uploadNormalMatrixToShader();
+
             drawCube(pwgl.woodTexture);
             popModelViewMatrix();
         }
@@ -417,6 +488,9 @@ function drawCube(texture) {
     gl.bindBuffer(gl.ARRAY_BUFFER, pwgl.cubeVertexTextureCoordinateBuffer);
     gl.vertexAttribPointer(pwgl.vertexTextureAttributeLoc, pwgl.CUBE_VERTEX_TEX_COORD_BUF_ITEM_SIZE, gl.FLOAT, false, 0, 0);
 
+    gl.bindBuffer(gl.ARRAY_BUFFER, pwgl.cubeVertexNormalBuffer);
+    gl.vertexAttribPointer(pwgl.vertexNormalAttributeLoc, pwgl.CUBE_VERTEX_NORMAL_BUF_ITEM_SIZE, gl.FLOAT, false, 0, 0);
+
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -425,7 +499,7 @@ function drawCube(texture) {
 }
 // 将 modelViewMatrix 矩阵压入堆栈
 function pushModelViewMatrix() {
-    var copyToPush = glMatrix.mat4.clone(modelViewMatrix);
+    var copyToPush = glMatrix.mat4.clone(pwgl.modelViewMatrix);
     modelViewMatrixStack.push(copyToPush);
 }
 
@@ -434,5 +508,5 @@ function popModelViewMatrix() {
     if (modelViewMatrixStack.length == 0) {
         throw "Error popModelViewMatrix() - Stack was empty ";
     }
-    modelViewMatrix = modelViewMatrixStack.pop();
+    pwgl.modelViewMatrix = modelViewMatrixStack.pop();
 }
