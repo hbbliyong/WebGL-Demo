@@ -1,3 +1,6 @@
+/**
+ * 平行光
+ */
 var VSHADER_SOURCE =
     `
 	attribute vec3 a_Position;
@@ -335,7 +338,7 @@ function setupLights() {
     gl.uniform3fv(pwgl.uniformLightPositionLoc, [.0, 10.0, -10.0]);
     gl.uniform3fv(pwgl.uniformAmbientLightColorLoc, [.3, .3, .3]);
     gl.uniform3fv(pwgl.uniformDiffuseLightColorLoc, [.9, .9, .9]);
-    gl.uniform3fv(pwgl.uniformSpecularLightColorLoc, [.0, .0, .0]);
+    gl.uniform3fv(pwgl.uniformSpecularLightColorLoc, [.8, .8, .8]);
 
     gl.uniform3fv(pwgl.uniformSpotDirectionLoc, [0.0, -1.0, 0.0]);
 }
