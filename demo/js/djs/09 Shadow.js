@@ -110,9 +110,57 @@ function main() {
     viewProjMatrix.lookAt(.0, 7.0, 9.0, .0, .0, .0, .0, 1.0, .0);
 
     //旋转角度
-    let currentAngle = .0;
+    let currentAngle = 0.0;
     //三角形的模型视图投影矩阵（model view projection matrix）
     let mvpMatrixFromLight_t = new Matrix4();
     //面板的模型视图投影矩阵
     let mvpMatrixFromLight_p = new Matrix4();
+
+    //更新函数
+    let tick = function() {
+        currentAngle = animate(currentAngle);
+        //设定fbo为当前绘制的帧缓冲
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    }
+
+    //每秒的旋转角度
+    let ANGLE_STEP = 40;
+    let last = Date.now();
+
+    function animate(angle) {
+        let now = Date.now();
+        let elapsed = now - last;
+        last = now;
+        let newAngle = angle + (ANGLE_STEP * elapsed) / 1000.0;
+        return newAngle % 360;
+    }
+
+    function initFramebufferObject(gl) {
+        let framebuffer, texture, depthBuffer;
+        let error = function() {
+            if (framebuffer) {
+                gl.deleteFramebuffer(framebuffer);
+            }
+            if (texture) {
+                gl.deleteTexture(texture);
+            }
+            if (depthBuffer) {
+                gl.deleteRenderbuffer(depthBuffer)
+            }
+            return null;
+        }
+
+        framebuffer = gl.createFramebuffer();
+        if (!framebuffer) {
+            console.log('failed to create frame buffer object');
+            return error();
+        }
+
+        //创建贴图并设定贴图尺寸
+        texture = gl.createTexture();
+        if (!texture) {
+            console.log('Failed to create texture object');
+            return error();
+        }
+    }
 }
